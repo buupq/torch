@@ -1,43 +1,29 @@
+#################
+## main engine ##
+#################
 
-# main engine
 import torch
 from torch import nn
+from tqdm.auto import tqdm
 
-class tinyVGG(nn.Module):
-    def __init__(self, name: str, inp_shape: int, out_shape: int, hidden_units=10):
-        super().__init__()
-
-        self.name = name
-
-        self.block_1 = nn.Sequential(
-            nn.Conv2d(in_channels=inp_shape, out_channels=hidden_units, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(in_channels=hidden_units, out_channels=hidden_units, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2)
-        )
-
-        self.block_2 = nn.Sequential(
-            nn.Conv2d(in_channels=hidden_units, out_channels=hidden_units, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(in_channels=hidden_units, out_channels=hidden_units, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2)
-        )
-
-        self.classifier = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(in_features=hidden_units*16*16, out_features=out_shape)
-        )
-
-    def forward(self, x: torch.Tensor):
-        return self.classifier(self.block_2(self.block_1(x)))
-
+# train step function
 def train_step(model: torch.nn.Module,
                dataloader: torch.utils.data.DataLoader,
                loss_fn: torch.nn.Module,
-               optimizer: torch.optim.Optimizer):
+               optimizer: torch.optim.Optimizer,
+              device: torch.device):
 
+    """training step
+    Args:
+        model: input model
+        dataloader: train dataloader
+        loss_fn: loss function
+        optimizer: optimizer
+        device: training device
+    Returns:
+        train_loss: training loss
+        train_acc: training accuracy"""
+    
     # switch to train mode
     model.train()
 
@@ -46,6 +32,9 @@ def train_step(model: torch.nn.Module,
 
     # loop over dataloader batch
     for batch, (X, y) in enumerate(dataloader):
+
+        # send data to device
+        X, y = X.to(device), y.to(device)
 
         # compute train logit
         train_logit = model(X)
@@ -78,9 +67,21 @@ def train_step(model: torch.nn.Module,
     # return train loss and accuracy
     return train_loss, train_acc
 
+# test step function
 def test_step(model: torch.nn.Module,
               dataloader: torch.utils.data.DataLoader,
-              loss_fn: torch.nn.Module):
+              loss_fn: torch.nn.Module,
+             device: torch.device):
+
+    """training step
+    Args:
+        model: input model
+        dataloader: test dataloader
+        loss_fn: loss function
+        device: testing device 
+    Returns:
+        train_loss: training loss
+        train_acc: training accuracy"""
 
     # switch to evaluation mode
     model.eval()
@@ -91,6 +92,9 @@ def test_step(model: torch.nn.Module,
     # loop over dataloader batch
     with torch.inference_mode():
         for batch, (X, y) in enumerate(dataloader):
+
+            # send data to device
+            X, y = X.to(device), y.to(device)
 
             # compute test logit
             test_logit = model(X)
@@ -110,42 +114,72 @@ def test_step(model: torch.nn.Module,
 
     # return test loss and accuracy
     return test_loss, test_acc
+    
 
+# training function
 def train(model: torch.nn.Module,
           train_dataloader: torch.utils.data.DataLoader,
           test_dataloader: torch.utils.data.DataLoader,
           loss_fn: torch.nn.Module,
           optimizer: torch.optim.Optimizer,
-          epochs: int=3):
+          epochs: int,
+         device: torch.device):
+    
+    """training function
+    Args:
+        model: input model
+        train_dataloader: train dataloader
+        test_dataloader: test dataloader
+        loss_fn: loss function
+        optimizer: optimizer
+        epochs: number of epochs
+        device: training device
+    Returns:
+        results: dictionary of train, test loss and accuracy"""
 
+    
+    # initialize result dictionary
+    results = {
+        "train_loss": [],
+        "train_acc": [],
+        "test_loss": [],
+        "test_acc": []
+    }
 
-    results = {"train_loss": [],
-               "train_acc": [],
-               "test_loss": [],
-               "test_acc": []}
+    # loop over epochs
+    for epoch in tqdm(range(epochs)):
 
-    for epoch in range(epochs):
-
+        # get train loss and acc
         train_loss, train_acc = train_step(
             model = model,
             dataloader = train_dataloader,
             loss_fn = loss_fn,
-            optimizer = optimizer
+            optimizer = optimizer,
+            device = device
         )
 
+        # get test loss and acc
         test_loss, test_acc = test_step(
             model = model,
             dataloader = test_dataloader,
-            loss_fn = loss_fn
+            loss_fn = loss_fn,
+            device=device
         )
 
+        # print out result in each epoch
+        print(
+            f"epoch: {epoch} | "
+            f"train_loss: {train_loss:.4f} | "
+            f"train_acc: {train_acc:.4f} | "
+            f"test_loss: {test_loss:.4f} | "
+            f"test_acc: {test_acc:.4f}"
+        )
+
+        # update result dictionary
         results["train_loss"].append(train_loss)
         results["train_acc"].append(train_acc)
         results["test_loss"].append(test_loss)
         results["test_acc"].append(test_acc)
 
-
-        print(f"epoch: {epoch} | train loss: {train_loss:.3f} | train acc: {train_acc:.3f} | test loss: {test_loss:.3f} | test acc: {test_acc:.3f}")
-
+    # return result dictionary
     return results
-

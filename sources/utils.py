@@ -51,48 +51,22 @@ def list_file_tree(
                     if num_files == num_file_cap:
                         print(f"{subindent} and {len(files)} other files...")
 
-
-# download data
-from pathlib import Path
-from zipfile import ZipFile
-import requests
-
-def download_data(url):
-    """Download file from an url to data, extract files to images folder
-    Args:
-        url: url to the data source
-    Returns:
-        image_path, train_path, test_path = download_data(url=url)
-            image_path: folder to store train and test images
-            train_path: folder to store train data
-            test_path: folder to store test data
-    """
-
-    # create data directory
-    data_path = Path("data")
-    image_path = data_path / "images"
-    image_path.mkdir(parents=True, exist_ok=True)
-
-    # download zip file to data/
-    request = requests.get(url)
-    with open(data_path / "images.zip", "wb") as f:
-        f.write(request.content)
-
-    # extract images to data/images
-    with ZipFile(data_path / "images.zip") as zip_ref:
-        zip_ref.extractall(image_path)
-
-    # train and test directories
-    train_dir = image_path / "train"
-    test_dir = image_path / "test"
-
-
-    return image_path, train_dir, test_dir
-
-
 def save_model(model:torch.nn.Module,
                model_dir: str):
+    
+    """save model function
+    Args:
+        model: input model
+        model_dir: directory to save model (str)
+    Returns:
+        model_save_path (str): path to saved model"""
 
+    model_dir = Path(model_dir)
+    if model_dir.is_dir():
+        print(f"[INFO] {model_dir} exists.")
+    else:
+        model_dir.mkdir(parents=True, exist_ok=True)
+        
     model_save_path = Path(model_dir) / (model.name + ".pth")
 
     torch.save(
@@ -101,6 +75,8 @@ def save_model(model:torch.nn.Module,
     )
 
     return model_save_path
+
+
 
 def load_saved_model(loaded_model: torch.nn.Module,
                      model_saved_path: str):
