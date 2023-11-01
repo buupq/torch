@@ -82,3 +82,25 @@ def load_saved_model(loaded_model: torch.nn.Module,
                      model_saved_path: str):
 
     loaded_model.load_state_dict(torch.load(model_saved_path))
+
+
+# model summary function
+def check_model_summary(model: torch.nn.Module,
+                       input_size = [32, 3, 224, 224],
+                       col_names = ["input_size", "output_size", "num_params", "trainable"],
+                       col_width = 20):
+    """provide summary of a model
+    Args:
+        model: torch model
+        input_size: size of input, default=[32, 3, 224, 224]
+        col_names: printed columns
+        col_width: width of printed column
+    return:
+        summary of the model
+    """
+    return summary(
+        model = model,
+        input_size = input_size,
+        col_names = col_names,
+        col_width = col_width
+    )
