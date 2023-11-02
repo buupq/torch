@@ -8,12 +8,12 @@ from torch import nn
 from tqdm.auto import tqdm
 
 
-# train step function
+### train step function ###
 def train_step(model: torch.nn.Module,
                dataloader: torch.utils.data.DataLoader,
                loss_fn: torch.nn.Module,
                optimizer: torch.optim.Optimizer,
-              device: torch.device):
+               device: torch.device):
 
     """training step
     Args:
@@ -69,21 +69,21 @@ def train_step(model: torch.nn.Module,
     # return train loss and accuracy
     return train_loss, train_acc
 
-# test step function
+### test step function ###
 def test_step(model: torch.nn.Module,
               dataloader: torch.utils.data.DataLoader,
               loss_fn: torch.nn.Module,
              device: torch.device):
 
-    """training step
+    """testing step
     Args:
         model: input model
         dataloader: test dataloader
         loss_fn: loss function
         device: testing device 
     Returns:
-        train_loss: training loss
-        train_acc: training accuracy"""
+        test_loss: testing loss
+        test_acc: testing accuracy"""
 
     # switch to evaluation mode
     model.eval()
@@ -118,14 +118,15 @@ def test_step(model: torch.nn.Module,
     return test_loss, test_acc
     
 
-# training function
+### training function ###
 def train(model: torch.nn.Module,
           train_dataloader: torch.utils.data.DataLoader,
           test_dataloader: torch.utils.data.DataLoader,
           loss_fn: torch.nn.Module,
           optimizer: torch.optim.Optimizer,
           epochs: int,
-         device: torch.device):
+          device: torch.device,
+          INFO:bool=True):
     
     """training function
     Args:
@@ -169,13 +170,14 @@ def train(model: torch.nn.Module,
         )
 
         # print out result in each epoch
-        print(
-            f"epoch: {epoch} | "
-            f"train_loss: {train_loss:.4f} | "
-            f"train_acc: {train_acc:.4f} | "
-            f"test_loss: {test_loss:.4f} | "
-            f"test_acc: {test_acc:.4f}"
-        )
+        if INFO:
+            print(
+                f"epoch: {epoch} | "
+                f"train_loss: {train_loss:.4f} | "
+                f"train_acc: {train_acc:.4f} | "
+                f"test_loss: {test_loss:.4f} | "
+                f"test_acc: {test_acc:.4f}"
+            )
 
         # update result dictionary
         results["train_loss"].append(train_loss)
@@ -187,7 +189,7 @@ def train(model: torch.nn.Module,
     return results
 
 
-# training function with tensorboard writer
+### training function with tensorboard writer ###
 def train_tsb_writer(model: torch.nn.Module,
           train_dataloader: torch.utils.data.DataLoader,
           test_dataloader: torch.utils.data.DataLoader,
@@ -195,9 +197,10 @@ def train_tsb_writer(model: torch.nn.Module,
           optimizer: torch.optim.Optimizer,
           epochs: int,
           device: torch.device,
-          writer: writer):
+          writer: torch.utils.tensorboard.writer.SummaryWriter,
+          INFO: bool=True):
     
-    """training function
+    """training function including tensorboard writer
     Args:
         model: input model
         train_dataloader: train dataloader
@@ -239,13 +242,14 @@ def train_tsb_writer(model: torch.nn.Module,
         )
 
         # print out result in each epoch
-        print(
-            f"epoch: {epoch} | "
-            f"train_loss: {train_loss:.4f} | "
-            f"train_acc: {train_acc:.4f} | "
-            f"test_loss: {test_loss:.4f} | "
-            f"test_acc: {test_acc:.4f}"
-        )
+        if INFO:
+            print(
+                f"epoch: {epoch} | "
+                f"train_loss: {train_loss:.4f} | "
+                f"train_acc: {train_acc:.4f} | "
+                f"test_loss: {test_loss:.4f} | "
+                f"test_acc: {test_acc:.4f}"
+            )
 
         # update result dictionary
         results["train_loss"].append(train_loss)
@@ -275,5 +279,8 @@ def train_tsb_writer(model: torch.nn.Module,
 
     # close writer
     writer.close()
+    
     # return result dictionary
     return results
+
+

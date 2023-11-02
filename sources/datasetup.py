@@ -7,9 +7,11 @@ from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 import os
 
+### download data from url ###
 def download_data(source: str,
                  destination: str="images",
-                 remove_source: bool=True):
+                 remove_source: bool=True,
+                 INFO: bool=True):
     
     """Download file from an url to data, extract files to images folder
     Args:
@@ -23,32 +25,41 @@ def download_data(source: str,
 
     # check if image_path exist and create the dir
     if image_path.is_dir() and len(os.listdir(image_path)) > 0 :
-        print(f"[INFO] {image_path} exist.")
+        if INFO:
+            print(f"[INFO] {image_path} exist.")
     else:
-        print(f"[INFO] creating {image_path}...")
+        if INFO:
+            print(f"[INFO] creating {image_path}...")
         image_path.mkdir(parents=True, exist_ok=True)
 
         zip_file_name = Path(source).name
         zip_file_path = data_path / zip_file_name
-        print(f"[INFO] downloading {zip_file_name} to {data_path}...")
+        if INFO:
+            print(f"[INFO] downloading {zip_file_name} to {data_path}...")
         with open(zip_file_path, "wb") as f:
             request = requests.get(url=source)
             f.write(request.content)
-
-        print(f"[INFO] extracting {zip_file_name} to {image_path}...")
+        if INFO:
+            print(f"[INFO] extracting {zip_file_name} to {image_path}...")
         with ZipFile(zip_file_path) as zip_ref:
             zip_ref.extractall(image_path)
+    
+        if remove_source:
+            if INFO:
+                print(f"[INFO] removing {zip_file_name}...")
+            os.remove(zip_file_path)
 
     return image_path
 
 
-# create dataloader function
+### create dataloaders ###
 def create_dataloaders(train_dir: str,
                     test_dir: str,
                     train_transforms: torchvision.transforms.Compose,
                     test_transforms: torchvision.transforms.Compose,
                     batch_size: int=32,
-                    num_workers: int=1):
+                    num_workers: int=1,
+                    INFO: bool=True):
 
     """create train and test dataloader from train and test directory using ImageFolder
     Args:
@@ -95,5 +106,13 @@ def create_dataloaders(train_dir: str,
         batch_size = batch_size,
         num_workers = num_workers
     )
+    
+    if INFO:
+        print(
+            f"[INFO] creating dataloaders... \n"
+            f"train_dataloader: {train_dataloader} \n"
+            f"test_dataloader: {test_dataloader} \n"
+            f"number of class_names: {len(class_names)}"
+        )
 
     return train_dataloader, test_dataloader, class_names
