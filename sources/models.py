@@ -5,10 +5,21 @@ import torchvision
 from torch import nn
 
 class tinyVGG(nn.Module):
-    def __init__(self, name: str, inp_shape: int, out_shape: int, hidden_units=10):
+
+    """tinyVGG class
+    Args:
+        name: model name, default is tinyVGG
+        inp_shape: input shape, which is the number of color channels
+        out_shape: number of training class
+        hidden_units: number of hidden units"""
+    
+    def __init__(self, inp_shape: int, out_shape: int, hidden_units=10, name: str="tinyVGG", INFO: bool=True):
         super().__init__()
 
         self.name = name
+
+        if INFO:
+            print(f"[INFO] creating {self.name} model...")
 
         self.block_1 = nn.Sequential(
             nn.Conv2d(in_channels=inp_shape, out_channels=hidden_units, kernel_size=3, stride=1, padding=1),
