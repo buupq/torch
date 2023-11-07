@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import torch
+from torch.utils.tensorboard.writer import SummaryWriter
 
 class bcolors:
     HEADER = '\033[95m'
@@ -120,4 +121,25 @@ def load_saved_model(loaded_model: torch.nn.Module,
 
     loaded_model.load_state_dict(torch.load(model_saved_path))
 
+
+
+# create writer
+def create_writer(grid_names: []="",
+                 INFO: bool=True):
+    """create a tensorboard writer
+    Args:
+        grid_names: list of grid
+    Returns:
+        Tensorboard SummaryWriter"""
     
+    log_dir = "writerLog"
+    for grid_name in grid_names:
+        log_dir = os.path.join(log_dir, grid_name)
+
+    if INFO:
+        print(f"[INFO] creating writer log at: {log_dir}")
+    
+    return SummaryWriter(
+        log_dir=log_dir
+    )
+
