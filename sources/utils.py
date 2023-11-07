@@ -210,3 +210,23 @@ def predict_label(model: torch.nn.Module,
                 plt.title(f"correct label: {correct_label} | predicted label: {label} | {correct_label == label}")
 
     return label
+
+
+
+def plot_loss_acc(results: dict):
+
+    """plot train and test loss and accuracy from result dictionary
+    Args:
+        results: dictionary of train and test loss and accuracy"""
+
+    fig, ax = plt.subplots(1, 2, figsize=(10,4))
+
+    ax[0].plot(results["train_loss"], label="train_loss")
+    ax[0].plot(results["test_loss"], label="test_loss")
+    ax[0].set_xlabel("epoch")
+    ax[0].legend()
+
+    ax[1].plot(results["train_acc"], label="train_acc")
+    ax[1].plot(results["test_acc"], label="test_acc")
+    ax[1].set_xlabel("epoch")
+    ax[1].legend()
