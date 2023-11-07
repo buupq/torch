@@ -1,7 +1,10 @@
 import os
 from pathlib import Path
 import torch
+import torchvision
+from PIL import Image
 from torch.utils.tensorboard.writer import SummaryWriter
+import matplotlib.pyplot as plt
 
 class bcolors:
     HEADER = '\033[95m'
@@ -90,7 +93,8 @@ def tb_address():
 
 
 def save_model(model:torch.nn.Module,
-               model_dir: str):
+               model_dir: str,
+              INFO: bool=False):
     
     """save trained model
     Args:
@@ -101,25 +105,39 @@ def save_model(model:torch.nn.Module,
 
     model_dir = Path(model_dir)
     if model_dir.is_dir():
-        print(f"[INFO] {model_dir} exists.")
+        if INFO:
+            print(f"[INFO] {model_dir} exists.")
     else:
+        if INFO:
+            print(f"[INFO] creating folder to save model {model.name}...")
         model_dir.mkdir(parents=True, exist_ok=True)
-        
+
+    # path to saved model
     model_save_path = Path(model_dir) / (model.name + ".pth")
 
-    torch.save(
-        obj = model.state_dict(),
-        f = model_save_path
-    )
+    # check if the model exist and prompt overwritten
+    write_model = True
+    if model_save_path.is_file():
+        yn = input(f"[INQ] {model_save_path} exists. Overwrite the existing model? Y/N: ")        
+        if yn.capitalize() != "Y":
+            print(f"[INFO] skip writing {model_saved_path}...")
+            write_model = False
+
+    # write model to file
+    if write_model:
+        torch.save(
+            obj = model.state_dict(),
+            f = model_save_path
+        )
 
     return model_save_path
 
 
 
 def load_saved_model(loaded_model: torch.nn.Module,
-                     model_saved_path: str):
+                     loaded_path: str):
 
-    loaded_model.load_state_dict(torch.load(model_saved_path))
+    loaded_model.load_state_dict(torch.load(loaded_path))
 
 
 
@@ -143,3 +161,48 @@ def create_writer(grid_names: []="",
         log_dir=log_dir
     )
 
+
+def predict_label(model: torch.nn.Module,
+                  image_path: str,
+                  class_names: list,
+                  transforms: torchvision.transforms,
+                  device: torch.device,
+                  INFO: bool=False):
+
+    """predict label from a model
+    Args:
+        model: trained model
+        image_path: path to the image
+        class_names: list of class name in the train dataset
+        transforms: image transformation method
+        device: device where model and image reside
+        INFO: extra information printing flag including true label and image rendering
+    Returns:
+        label: predicted label"""
+    
+    # get correct label
+    correct_label = image_path.parent.stem
+    
+    # switch to evaluation mode
+    model.eval()
+    with torch.inference_mode():
+        # open image with PIL
+        with Image.open(image_path) as img:
+            # transform image to torch tensor
+            img_transformed = transforms(img).unsqueeze(dim=0).to(device)
+            # compute logit
+            y_logit = model(img_transformed)
+            # print logit for debugging
+            if INFO:
+                print(y_logit)
+            # predict label index
+            y_pred = torch.argmax(torch.softmax(y_logit, dim=1))
+            # get label
+            label = class_names[y_pred]
+
+            # plot the image with correct and predicted labels
+            if INFO:
+                plt.imshow(img_transformed.squeeze().permute(1,2,0).to("cpu").numpy())
+                plt.title(f"correct label: {correct_label} | predicted label: {label} | {correct_label == label}")
+
+    return label
