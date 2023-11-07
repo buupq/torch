@@ -88,13 +88,14 @@ def tb_address():
     
     display(HTML('<a href="%s">%s</a>'%(address,address)))
     
- 
+
 
 
 
 def save_model(model:torch.nn.Module,
                model_dir: str,
-              INFO: bool=False):
+               model_name_grid: []="",
+               INFO: bool=False):
     
     """save trained model
     Args:
@@ -113,7 +114,7 @@ def save_model(model:torch.nn.Module,
         model_dir.mkdir(parents=True, exist_ok=True)
 
     # path to saved model
-    model_save_path = Path(model_dir) / (model.name + ".pth")
+    model_save_path = Path(model_dir) / ("_".join(model_name_grid) + ".pth")
 
     # check if the model exist and prompt overwritten
     write_model = True
@@ -131,6 +132,9 @@ def save_model(model:torch.nn.Module,
         )
 
     return model_save_path
+
+
+
 
 
 
