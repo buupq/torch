@@ -88,7 +88,7 @@ def create_effnet(effnet_version: int=0,
             torch.nn.Linear(in_features=1280, out_features=num_class_names, bias=True)
         ).to(device)
     elif effnet_version == 2:
-        model.classifier == torch.nn.Sequential(
+        model.classifier = torch.nn.Sequential(
             torch.nn.Dropout(p=0.3, inplace=True),
             torch.nn.Linear(in_features=1408, out_features=num_class_names, bias=True)
         ).to(device)
