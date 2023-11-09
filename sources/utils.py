@@ -95,12 +95,16 @@ def tb_address():
 def save_model(model:torch.nn.Module,
                model_dir: str,
                model_name_grid: []="",
-               INFO: bool=False):
+               over_write: bool=True,
+               INFO: bool=True):
     
     """save trained model
     Args:
         model: trained model
         model_dir: directory to save model (str)
+        model_name_grid: grid list in model training grid
+        over_write: overwriting the existing model
+        INFO: extra info printout
     Returns:
         model_save_path (str): path to saved model"""
 
@@ -119,10 +123,12 @@ def save_model(model:torch.nn.Module,
     # check if the model exist and prompt overwritten
     write_model = True
     if model_save_path.is_file():
-        yn = input(f"[INQ] {model_save_path} exists. Overwrite the existing model? Y/N: ")        
-        if yn.capitalize() != "Y":
-            print(f"[INFO] skip writing {model_saved_path}...")
+        if not over_write:
             write_model = False
+            if INFO:
+                print(f"[INFO] {model_save_path} exists. Ovewriting...")
+            else:
+                print(f"[INFO] {model_save_path} exists. Skipp writing.")
 
     # write model to file
     if write_model:
@@ -138,10 +144,10 @@ def save_model(model:torch.nn.Module,
 
 
 
-def load_saved_model(loaded_model: torch.nn.Module,
-                     loaded_path: str):
+def load_saved_model(model: torch.nn.Module,
+                     saved_model_path: str):
 
-    loaded_model.load_state_dict(torch.load(loaded_path))
+    model.load_state_dict(torch.load(saved_model_path))
 
 
 
@@ -220,13 +226,14 @@ def plot_loss_acc(results: dict):
         results: dictionary of train and test loss and accuracy"""
 
     fig, ax = plt.subplots(1, 2, figsize=(10,4))
-
-    ax[0].plot(results["train_loss"], label="train_loss")
-    ax[0].plot(results["test_loss"], label="test_loss")
+    
+    ax[0].plot(results["train_loss"], '-^', label="train_loss")
+    ax[0].plot(results["test_loss"], '-*', label="test_loss")
     ax[0].set_xlabel("epoch")
     ax[0].legend()
-
-    ax[1].plot(results["train_acc"], label="train_acc")
-    ax[1].plot(results["test_acc"], label="test_acc")
-    ax[1].set_xlabel("epoch")
+    
+    ax[1].plot(results["train_acc"], '-^', label="train_acc")
+    ax[1].plot(results["test_acc"], '-*', label="test_acc")
+    ax[0].set_xlabel("epoch")
     ax[1].legend()
+
