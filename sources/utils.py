@@ -132,6 +132,8 @@ def save_model(model:torch.nn.Module,
 
     # write model to file
     if write_model:
+        if INFO:
+            print(f"save model to: {model_save_path}...")
         torch.save(
             obj = model.state_dict(),
             f = model_save_path
